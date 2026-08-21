@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6cf55"/><stop offset=".5" stop-color="#b47700"/><stop offset="1" stop-color="#ffd85b"/></linearGradient></defs>
-<circle cx="400" cy="400" r="392" fill="#f7f7f5" stroke="url(#g)" stroke-width="16"/>
-<text x="400" y="410" text-anchor="middle" font-family="Arial,sans-serif" font-size="125" font-weight="900" fill="#080808" transform="skewX(-8)">MANGA</text>
-<text x="400" y="535" text-anchor="middle" font-family="Arial,sans-serif" font-size="120" font-weight="900" fill="#b77c08" transform="skewX(-8)">NOVA</text>
-<text x="400" y="605" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" letter-spacing="8" font-weight="700" fill="#a0700a">MANGA NOVA</text>
-<text x="400" y="650" text-anchor="middle" direction="rtl" font-family="Tahoma,Arial,sans-serif" font-size="30" font-weight="700" fill="#111">بهترین سایت ترجمه مانهوا</text>
-</svg>
