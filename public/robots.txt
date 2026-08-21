@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://manganova-production.up.railway.app/sitemap.xml
