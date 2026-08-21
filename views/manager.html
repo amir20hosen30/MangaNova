@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MangaNova Manager v18</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+body{background:#0b0b0b;color:#eee}.wrap{padding:25px}.box{background:#171717;border:1px solid #333;border-radius:18px;padding:20px;margin:20px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}input,textarea,select{background:#111;color:#fff;border:1px solid #444;padding:12px;border-radius:10px}button{padding:10px 15px;border:0;border-radius:10px;cursor:pointer}.primary{background:#ffc400;color:#111}.danger{background:#a33;color:#fff}.item{display:flex;justify-content:space-between;align-items:center;background:#111;padding:14px;border-radius:10px;margin:8px 0}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+
+.chapter-list{margin-top:15px}
+.chapter-empty{padding:18px;text-align:center;color:#aaa;background:#111;border-radius:10px}
+.chapter-row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#111;border:1px solid #2b2b2b;padding:13px 15px;border-radius:10px;margin:8px 0}
+.chapter-info{display:flex;flex-direction:column;gap:4px}
+.chapter-pages{font-size:12px;color:#999}
+.chapter-delete{background:#b3261e;color:#fff}
+.chapter-delete:disabled{opacity:.5;cursor:not-allowed}
+.notice{margin-top:10px;color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>MangaNova Manager v18</h1>
+
+<div class="box">
+<h2>افزودن اثر</h2>
+<form id="workForm" class="grid" enctype="multipart/form-data">
+<input name="title" placeholder="عنوان *" required>
+<input name="english_title" placeholder="عنوان انگلیسی">
+<input name="year" placeholder="سال انتشار">
+<input name="genres" placeholder="ژانر">
+<input name="author" placeholder="نویسنده">
+<input name="designer" placeholder="طراح">
+<input name="translator" placeholder="مترجم">
+<input name="cleaner" placeholder="کلینر">
+<input name="typesetter" placeholder="تایپست">
+<textarea name="description" placeholder="توضیحات"></textarea>
+<input name="cover" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
+<button class="primary">ثبت اثر</button>
+</form>
+<p id="msg"></p>
+</div>
+
+<div class="box">
+<h2>لیست آثار</h2>
+<div id="works"></div>
+</div>
+
+
+<div class="box">
+<h2>مدیریت فصل‌ها</h2>
+<label for="chapterWorkId">انتخاب مانهوا</label>
+<select id="chapterWorkId"></select>
+<div id="chapterList" class="chapter-list">
+  <div class="chapter-empty">یک مانهوا را انتخاب کنید.</div>
+</div>
+<p class="notice">حذف هر فصل فقط همان فصل و تمام صفحات مربوط به همان فصل را حذف می‌کند؛ فصل‌های دیگر دست‌نخورده می‌مانند.</p>
+</div>
+
+<div class="box">
+<h2>افزودن فصل</h2>
+<form id="chapterForm" enctype="multipart/form-data" class="grid">
+<select id="workId" name="work_id"></select>
+<input name="title" placeholder="عنوان فصل">
+<input name="number" placeholder="شماره فصل">
+<input type="file" name="pages" multiple>
+<input type="file" name="zip" accept=".zip">
+<button class="primary">افزودن فصل</button>
+</form>
+</div>
+</div>
+<script>
+const $=x=>document.querySelector(x);
+async function api(u,o){
+ let r=await fetch(u,o);
+ let d=await r.json().catch(()=>({}));
+ if(!r.ok)throw Error(d.error||'خطای سرور');
+ return d;
+}
+
+async function loadWorks(preferredId){
+ let d=await api('/api/works');
+ let box=$('#works'),sel=$('#workId'),chapterSel=$('#chapterWorkId');
+ sel.innerHTML='';
+ chapterSel.innerHTML='';
+ box.innerHTML='';
+
+ d.works.forEach(w=>{
+  const option=`<option value="${w.id}">${w.title}</option>`;
+  sel.insertAdjacentHTML('beforeend',option);
+  chapterSel.insertAdjacentHTML('beforeend',option);
+  box.insertAdjacentHTML('beforeend',
+    `<div class="item"><span>${escapeHtml(w.title)} (${w.chapter_count||0} فصل)</span><button class="danger" onclick="removeWork(${w.id})">حذف</button></div>`
+  );
+ });
+
+ if(d.works.length){
+   const target=preferredId && d.works.some(w=>w.id===+preferredId) ? +preferredId : +chapterSel.value;
+   chapterSel.value=String(target);
+   sel.value=String(target);
+   await loadChapters(target);
+ }else{
+   $('#chapterList').innerHTML='<div class="chapter-empty">هنوز مانهوا‌ای ثبت نشده است.</div>';
+ }
+}
+
+async function loadChapters(workId){
+ const list=$('#chapterList');
+ if(!workId){
+   list.innerHTML='<div class="chapter-empty">یک مانهوا را انتخاب کنید.</div>';
+   return;
+ }
+ list.innerHTML='<div class="chapter-empty">در حال بارگذاری فصل‌ها...</div>';
+ try{
+   const w=await api('/api/works/'+workId);
+   const chapters=Array.isArray(w.chapters)?w.chapters:[];
+   if(!chapters.length){
+     list.innerHTML='<div class="chapter-empty">این مانهوا هنوز فصلی ندارد.</div>';
+     return;
+   }
+   list.innerHTML=chapters.map(c=>`
+     <div class="chapter-row" id="chapter-row-${c.id}">
+       <div class="chapter-info">
+         <strong>فصل ${escapeHtml(String(c.number))} — ${escapeHtml(c.title||'بدون عنوان')}</strong>
+         <span class="chapter-pages">${c.id ? 'شناسه فصل: '+c.id : ''}</span>
+       </div>
+       <button class="chapter-delete" onclick="removeChapter(${c.id},${w.id})">🗑️ حذف فصل</button>
+     </div>
+   `).join('');
+ }catch(e){
+   list.innerHTML=`<div class="chapter-empty">${escapeHtml(e.message)}</div>`;
+ }
+}
+
+async function removeChapter(id,workId){
+ if(!confirm('این فصل و تمام صفحات همین فصل حذف شوند؟\nفصل‌های دیگر تغییری نمی‌کنند.')) return;
+ const buttons=document.querySelectorAll('#chapterList .chapter-delete');
+ buttons.forEach(b=>b.disabled=true);
+ try{
+   await api('/api/admin/chapter/'+id,{method:'DELETE'});
+   await loadWorks(workId);
+   $('#chapterWorkId').value=String(workId);
+   await loadChapters(workId);
+ }catch(e){
+   alert(e.message);
+   await loadChapters(workId);
+ }finally{
+   document.querySelectorAll('#chapterList .chapter-delete').forEach(b=>b.disabled=false);
+ }
+}
+
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,m=>({
+   '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ }[m]));
+}
+
+$('#chapterWorkId').addEventListener('change',async e=>{
+ $('#workId').value=e.target.value;
+ await loadChapters(e.target.value);
+});
+
+$('#workId').addEventListener('change',async e=>{
+ $('#chapterWorkId').value=e.target.value;
+ await loadChapters(e.target.value);
+});
+
+$('#workForm').onsubmit=async e=>{
+ e.preventDefault();
+ try{
+  await api('/api/admin/work',{method:'POST',body:new FormData(e.target)});
+  e.target.reset();
+  $('#msg').innerText='اثر اضافه شد';
+  await loadWorks();
+ }catch(x){$('#msg').innerText=x.message}
+};
+
+$('#chapterForm').onsubmit=async e=>{
+ e.preventDefault();
+ const workId=$('#workId').value;
+ try{
+  let f=new FormData(e.target);
+  await api('/api/admin/work/'+workId+'/chapter',{method:'POST',body:f});
+  e.target.reset();
+  alert('فصل اضافه شد');
+  await loadWorks(workId);
+ }catch(x){alert(x.message)}
+};
+
+async function removeWork(id){
+ if(!confirm('حذف اثر؟')) return;
+ try{
+   await api('/api/admin/work/'+id,{method:'DELETE'});
+   await loadWorks();
+ }catch(e){alert(e.message)}
+}
+
+loadWorks();
+</script>
+</body></html>
