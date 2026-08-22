@@ -220,7 +220,7 @@ header{position:sticky;top:0;z-index:20;background:#090a0fe8;backdrop-filter:blu
   #page-home .home-section .info{padding:9px}
   #page-home .home-section .info>b{font-size:13px}
   #page-home .card-stats{font-size:10px;gap:5px}
-  #page-explore .explore-tools{grid-template-columns:1fr .5fr!important}
+  #page-explore .explore-tools{grid-template-columns:1fr .6667fr!important}
   #page-explore .filter-toggle{padding:0 8px!important}
 }
 
@@ -297,8 +297,8 @@ header{position:sticky;top:0;z-index:20;background:#090a0fe8;backdrop-filter:blu
  .avatar-upload{font-size:11px;padding:7px 11px}
  .profile-menu-item{min-height:60px;padding:0 15px;font-size:15px;grid-template-columns:31px 1fr 20px}
  .menu-icon svg{width:23px;height:23px}.menu-arrow{font-size:27px}
- #page-explore .explore-tools{grid-template-columns:minmax(0,1fr) minmax(100px,.5fr)!important}
- #page-explore .filter-toggle{height:54px!important;padding:0 8px!important;font-size:14px}
+ #page-explore .explore-tools{grid-template-columns:minmax(0,1fr) minmax(0,.6667fr)!important}
+ #page-explore .filter-toggle{height:58px!important;padding:0 8px!important;font-size:14px}
  .filter-panel{padding:10px;border-radius:16px}
  .filter-title h2{font-size:18px}
  .filter-section{padding:8px 0}
