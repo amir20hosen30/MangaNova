@@ -139,6 +139,5 @@ function login(){
   modal.classList.add('show');
 }
 async function doLogin(){try{await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#u').value,password:$('#p').value})});location.reload()}catch(e){$('#msg').textContent=e.message}}
-$('#theme').onclick=()=>{document.body.classList.toggle('light');localStorage.theme=document.body.classList.contains('light')?'light':'dark'};
-if(localStorage.theme==='light')document.body.classList.add('light');
+document.body.classList.remove('light');try{localStorage.removeItem('theme')}catch(e){}
 init().catch(e=>$('#detailApp').innerHTML=`<div class="detail-loading">${esc(e.message)}</div>`);

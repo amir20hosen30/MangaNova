@@ -22,8 +22,7 @@ $('#zoomIn').onclick=()=>{zoom=Math.min(2,+(zoom+.1).toFixed(2));applyZoom()};
 $('#zoomOut').onclick=()=>{zoom=Math.max(.4,+(zoom-.1).toFixed(2));applyZoom()};
 $('#zoomReset').onclick=()=>{zoom=1;applyZoom()};
 $('#fitWidth').onclick=()=>{zoom=1;applyZoom();window.scrollTo({top:0,behavior:'smooth'})};
-$('#readerTheme').onclick=()=>{document.body.classList.toggle('light');localStorage.readerTheme=document.body.classList.contains('light')?'light':'dark'};
-if(localStorage.readerTheme==='light')document.body.classList.add('light');
+document.body.classList.remove('light');try{localStorage.removeItem('readerTheme')}catch(e){}
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'&&chapter?.next)location.href='/reader/'+chapter.next.id;
   if(e.key==='ArrowRight'&&chapter?.prev)location.href='/reader/'+chapter.prev.id;

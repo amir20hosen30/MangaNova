@@ -8,12 +8,12 @@ fs.mkdirSync(DATA_DIR,{recursive:true});
 fs.mkdirSync(path.join(UPLOADS_DIR,'covers'),{recursive:true});
 fs.mkdirSync(path.join(UPLOADS_DIR,'chapters'),{recursive:true});
 fs.mkdirSync(path.join(UPLOADS_DIR,'avatars'),{recursive:true});
-function fresh(){return {users:[],works:[],chapters:[],pages:[],favorites:[],history:[],comments:[],ratings:[],donations:[],seq:{users:1,works:1,chapters:1,pages:1,comments:1,ratings:1,donations:1}}}
+function fresh(){return {users:[],works:[],chapters:[],pages:[],favorites:[],history:[],comments:[],ratings:[],donations:[],tickets:[],seq:{users:1,works:1,chapters:1,pages:1,comments:1,ratings:1,donations:1,tickets:1}}}
 let db;
 try{db=fs.existsSync(DATA_FILE)?JSON.parse(fs.readFileSync(DATA_FILE,'utf8')):fresh()}catch{db=fresh()}
-for(const k of ['users','works','chapters','pages','favorites','history','comments','ratings','donations'])if(!Array.isArray(db[k]))db[k]=[];
+for(const k of ['users','works','chapters','pages','favorites','history','comments','ratings','donations','tickets'])if(!Array.isArray(db[k]))db[k]=[];
 if(!db.seq)db.seq={users:1,works:1,chapters:1,pages:1,comments:1,ratings:1,donations:1};
-for(const k of ['comments','ratings','donations'])if(!db.seq[k])db.seq[k]=1;
+for(const k of ['comments','ratings','donations','tickets'])if(!db.seq[k])db.seq[k]=1;
 function save(){fs.writeFileSync(DATA_FILE,JSON.stringify(db,null,2),'utf8')}
 function next(k){const n=db.seq[k]||1;db.seq[k]=n+1;return n}
 if(!db.users.some(u=>u.role==='admin') && process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD){
@@ -85,6 +85,11 @@ app.post('/api/register',(req,res)=>{const {username,password}=req.body||{};if(!
 app.post('/api/login',(req,res)=>{const r=db.users.find(u=>u.username===req.body.username);if(!r||!bcrypt.compareSync(req.body.password||'',r.password))return res.status(401).json({error:'نام کاربری یا رمز عبور اشتباه است'});req.session.user={id:r.id,username:r.username,role:r.role,avatar:r.avatar||''};res.json({user:req.session.user})});
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 app.post('/api/profile/avatar',auth,uploadAvatar.single('avatar'),(req,res)=>{if(!req.file)return res.status(400).json({error:'یک تصویر معتبر انتخاب کنید.'});const u=db.users.find(x=>x.id===user(req).id);if(!u)return res.status(404).json({error:'کاربر پیدا نشد'});if(u.avatar&&u.avatar.startsWith('/uploads/avatars/')){try{fs.unlinkSync(path.join(STORAGE_DIR,u.avatar.replace(/^\/uploads\//,'')))}catch{}}u.avatar='/uploads/avatars/'+req.file.filename;req.session.user.avatar=u.avatar;save();res.json({user:req.session.user})});
+// --- Support tickets ---
+app.get('/api/me/tickets',auth,(req,res)=>{const tickets=db.tickets.filter(t=>t.user_id===user(req).id).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));res.json({tickets})});
+app.post('/api/me/tickets',auth,(req,res)=>{const subject=String(req.body?.subject||'').trim().slice(0,120),message=String(req.body?.message||'').trim().slice(0,2000);if(!subject||!message)return res.status(400).json({error:'موضوع و متن پیام را وارد کنید.'});const now=new Date().toISOString();const t={id:next('tickets'),user_id:user(req).id,username:user(req).username,subject,message,status:'open',reply:'',created_at:now,updated_at:now};db.tickets.push(t);save();res.json({ticket:t})});
+app.get('/api/admin/tickets',admin,(req,res)=>res.json({tickets:[...db.tickets].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)))}));
+app.patch('/api/admin/tickets/:id',admin,(req,res)=>{const t=db.tickets.find(x=>x.id===+req.params.id);if(!t)return res.status(404).json({error:'تیکت پیدا نشد'});if(req.body?.reply!==undefined)t.reply=String(req.body.reply||'').trim().slice(0,3000);if(req.body?.status!==undefined&&['open','answered','closed'].includes(req.body.status))t.status=req.body.status;t.updated_at=new Date().toISOString();save();res.json({ticket:t})});
 app.get('/api/works',(req,res)=>{const q=(req.query.q||'').trim().toLowerCase();let works=db.works.filter(w=>!q||[w.title,w.english_title,w.description].some(v=>String(v||'').toLowerCase().includes(q))).sort((a,b)=>b.id-a.id);res.json({works:works.map(withCount)})});
 app.get('/api/works/:id',(req,res)=>{const w=db.works.find(x=>x.id===+req.params.id);if(!w)return res.status(404).json({error:'اثر پیدا نشد'});w.views=(w.views||0)+1;save();const out=withCount(w);out.chapters=db.chapters.filter(c=>c.work_id===w.id).sort((a,b)=>b.number-a.number);if(user(req))out.favorite=db.favorites.some(f=>f.user_id===user(req).id&&f.work_id===w.id);res.json(out)});
 
