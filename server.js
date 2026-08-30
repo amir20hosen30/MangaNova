@@ -13,7 +13,7 @@ function fresh(){return {users:[],works:[],chapters:[],pages:[],favorites:[],his
 let db;
 try{db=fs.existsSync(DATA_FILE)?JSON.parse(fs.readFileSync(DATA_FILE,'utf8')):fresh()}catch{db=fresh()}
 for(const k of ['users','works','chapters','pages','favorites','history','comments','ratings','donations','tickets'])if(!Array.isArray(db[k]))db[k]=[];
-if(!db.seq)db.seq={users:1,works:1,chapters:1,pages:1,comments:1,ratings:1,donations:1};
+if(!db.seq)db.seq={users:1,works:1,chapters:1,pages:1,comments:1,ratings:1,donations:1,tickets:1};
 for(const k of ['comments','ratings','donations','tickets'])if(!db.seq[k])db.seq[k]=1;
 function save(){fs.writeFileSync(DATA_FILE,JSON.stringify(db,null,2),'utf8')}
 function next(k){const n=db.seq[k]||1;db.seq[k]=n+1;return n}
@@ -82,16 +82,18 @@ function withCount(w){
 }
 app.get('/health',(req,res)=>res.status(200).json({ok:true,service:'manganova',timestamp:new Date().toISOString()}));
 app.get('/api/health',(req,res)=>res.status(200).json({ok:true}));
-app.get('/api/me',(req,res)=>{const sess=user(req);if(!sess)return res.json({user:null});const u=db.users.find(x=>x.id===sess.id);if(u)sess.avatar=u.avatar||'';res.json({user:sess})});
+app.get('/api/me',(req,res)=>{const sess=user(req);if(!sess)return res.json({user:null});const u=db.users.find(x=>x.id===sess.id);if(u){sess.avatar=u.avatar||'';sess.preferences=u.preferences||{}}res.json({user:sess})});
+app.patch('/api/me/preferences',auth,(req,res)=>{const u=db.users.find(x=>x.id===user(req).id);if(!u)return res.status(404).json({error:'کاربر پیدا نشد'});const incoming=req.body&&typeof req.body==='object'?req.body:{};const allowed=['ticketNotifications','siteNotifications','autoSaveProgress','imageQuality','readerWidth','showStats'];u.preferences={...(u.preferences||{})};for(const k of allowed){if(Object.prototype.hasOwnProperty.call(incoming,k))u.preferences[k]=incoming[k]}save();req.session.user.preferences=u.preferences;res.json({preferences:u.preferences})});
 app.post('/api/register',(req,res)=>{const {username,password}=req.body||{};if(!username||!password||password.length<6)return res.status(400).json({error:'نام کاربری و رمز عبور معتبر لازم است (رمز حداقل ۶ کاراکتر).'});if(db.users.some(u=>u.username===username))return res.status(409).json({error:'این نام کاربری قبلاً ثبت شده است.'});const u={id:next('users'),username,password:bcrypt.hashSync(password,10),role:'user',avatar:'',created_at:new Date().toISOString()};db.users.push(u);save();req.session.user={id:u.id,username:u.username,role:u.role,avatar:''};res.json({user:req.session.user})});
 app.post('/api/login',(req,res)=>{const r=db.users.find(u=>u.username===req.body.username);if(!r||!bcrypt.compareSync(req.body.password||'',r.password))return res.status(401).json({error:'نام کاربری یا رمز عبور اشتباه است'});req.session.user={id:r.id,username:r.username,role:r.role,avatar:r.avatar||''};res.json({user:req.session.user})});
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 app.post('/api/profile/avatar',auth,uploadAvatar.single('avatar'),(req,res)=>{if(!req.file)return res.status(400).json({error:'یک تصویر معتبر انتخاب کنید.'});const u=db.users.find(x=>x.id===user(req).id);if(!u)return res.status(404).json({error:'کاربر پیدا نشد'});if(u.avatar&&u.avatar.startsWith('/uploads/avatars/')){try{fs.unlinkSync(path.join(STORAGE_DIR,u.avatar.replace(/^\/uploads\//,'')))}catch{}}u.avatar='/uploads/avatars/'+req.file.filename;req.session.user.avatar=u.avatar;save();res.json({user:req.session.user})});
 // --- Support tickets ---
-app.get('/api/me/tickets',auth,(req,res)=>{const tickets=db.tickets.filter(t=>t.user_id===user(req).id).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));res.json({tickets})});
-app.post('/api/me/tickets',auth,(req,res)=>{const subject=String(req.body?.subject||'').trim().slice(0,120),message=String(req.body?.message||'').trim().slice(0,2000);if(!subject||!message)return res.status(400).json({error:'موضوع و متن پیام را وارد کنید.'});const now=new Date().toISOString();const t={id:next('tickets'),user_id:user(req).id,username:user(req).username,subject,message,status:'open',reply:'',created_at:now,updated_at:now};db.tickets.push(t);save();res.json({ticket:t})});
-app.get('/api/admin/tickets',admin,(req,res)=>res.json({tickets:[...db.tickets].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)))}));
-app.patch('/api/admin/tickets/:id',admin,(req,res)=>{const t=db.tickets.find(x=>x.id===+req.params.id);if(!t)return res.status(404).json({error:'تیکت پیدا نشد'});if(req.body?.reply!==undefined)t.reply=String(req.body.reply||'').trim().slice(0,3000);if(req.body?.status!==undefined&&['open','answered','closed'].includes(req.body.status))t.status=req.body.status;t.updated_at=new Date().toISOString();save();res.json({ticket:t})});
+app.get('/api/me/tickets',auth,(req,res)=>{const tickets=db.tickets.filter(t=>t.user_id===user(req).id).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));res.json({tickets,unread:tickets.filter(t=>t.user_unread).length})});
+app.patch('/api/me/tickets/:id/read',auth,(req,res)=>{const t=db.tickets.find(x=>x.id===+req.params.id&&x.user_id===user(req).id);if(!t)return res.status(404).json({error:'تیکت پیدا نشد'});t.user_unread=false;save();res.json({ok:true})});
+app.post('/api/me/tickets',auth,(req,res)=>{const subject=String(req.body?.subject||'').trim().slice(0,120),message=String(req.body?.message||'').trim().slice(0,2000);if(!subject||!message)return res.status(400).json({error:'موضوع و متن پیام را وارد کنید.'});const now=new Date().toISOString();const t={id:next('tickets'),user_id:user(req).id,username:user(req).username,subject,message,status:'open',reply:'',admin_seen:false,user_unread:false,created_at:now,updated_at:now};db.tickets.push(t);save();res.json({ticket:t})});
+app.get('/api/admin/tickets',admin,(req,res)=>{const tickets=[...db.tickets].sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));res.json({tickets,unread:tickets.filter(t=>t.status==='open'&&!t.admin_seen).length})});
+app.patch('/api/admin/tickets/:id',admin,(req,res)=>{const t=db.tickets.find(x=>x.id===+req.params.id);if(!t)return res.status(404).json({error:'تیکت پیدا نشد'});if(req.body?.reply!==undefined){t.reply=String(req.body.reply||'').trim().slice(0,3000);t.user_unread=!!t.reply}if(req.body?.status!==undefined&&['open','answered','closed'].includes(req.body.status))t.status=req.body.status;if(req.body?.admin_seen!==undefined)t.admin_seen=!!req.body.admin_seen;t.updated_at=new Date().toISOString();save();res.json({ticket:t})});
 app.get('/api/works',(req,res)=>{const q=(req.query.q||'').trim().toLowerCase();let works=db.works.filter(w=>!q||[w.title,w.english_title,w.description].some(v=>String(v||'').toLowerCase().includes(q))).sort((a,b)=>b.id-a.id);res.json({works:works.map(withCount)})});
 app.get('/api/works/:id',(req,res)=>{const w=db.works.find(x=>x.id===+req.params.id);if(!w)return res.status(404).json({error:'اثر پیدا نشد'});w.views=(w.views||0)+1;save();const out=withCount(w);out.chapters=db.chapters.filter(c=>c.work_id===w.id).sort((a,b)=>b.number-a.number);if(user(req))out.favorite=db.favorites.some(f=>f.user_id===user(req).id&&f.work_id===w.id);res.json(out)});
 
@@ -194,8 +196,8 @@ ${image?`<meta property="og:image" content="${xmlEscape(image.startsWith('http')
   res.type('html').send(page);
 });
 app.get('/reader/:id',(req,res)=>{if(!user(req))return res.redirect('/login');res.sendFile(path.join(ROOT,'public/reader.html'))});
-app.get('/admin',(req,res)=>{if(!user(req)||user(req).role!=='admin')return res.redirect('/login');res.sendFile(path.join(ROOT,'views/admin.html'))});
-app.get('/manager',(req,res)=>{if(!user(req)||user(req).role!=='admin')return res.redirect('/login');res.sendFile(path.join(ROOT,'views/manager.html'))});
+app.get('/admin',(req,res)=>{if(!user(req)||user(req).role!=='admin')return res.redirect('/login');res.sendFile(path.join(ROOT,'admin.html'))});
+app.get('/manager',(req,res)=>{if(!user(req)||user(req).role!=='admin')return res.redirect('/login');res.sendFile(path.join(ROOT,'manager.html'))});
 app.get('/',(req,res)=>res.sendFile(path.join(ROOT,'public/index.html')));
 app.get('/home',(req,res)=>res.sendFile(path.join(ROOT,'public/index.html')));
 app.get('/login',(req,res)=>{if(user(req))return res.redirect('/home');res.sendFile(path.join(ROOT,'public/login.html'))});
