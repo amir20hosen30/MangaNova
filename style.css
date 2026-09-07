@@ -955,3 +955,182 @@ button.primary,.primary{background:linear-gradient(135deg,#bd57ff,#7620dc)!impor
 .year-input input::-webkit-outer-spin-button,.year-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .year-input input[type=number]{-moz-appearance:textfield}
 .year-input svg{position:absolute;right:14px;width:16px;height:16px;color:var(--m);pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* =========================================================
+   v50 — Motion, micro-interactions & accessibility polish
+   Additive only: does not remove any earlier rule, just
+   makes existing interactions smoother and more premium.
+   ========================================================= */
+*{-webkit-tap-highlight-color:transparent}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* Smooth, consistent scrollbar everywhere */
+*{scrollbar-width:thin;scrollbar-color:#8b3dff66 transparent}
+*::-webkit-scrollbar{width:7px;height:7px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#a94dff,#6f22d6);border-radius:10px}
+*::-webkit-scrollbar-thumb:hover{background:#c05cff}
+
+/* Accessible, on-brand focus ring for keyboard users (mouse clicks stay clean) */
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.card:focus-visible{
+  outline:2px solid #c15cff;outline-offset:3px;border-radius:8px
+}
+
+/* Buttons & clickable chips get a real, springy transition + press feedback */
+button,.card,.chapter,.header-icon,.header-login,.ghost,.hero-ghost,.primary,
+.filter-chips button,.sort-grid button,.bottom-item,.side-item,.genre-chip,
+.footer-col a,.profile-actions button,.profile-actions a{
+  transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s ease,border-color .28s ease,background .28s ease,color .2s ease
+}
+button:active{transform:scale(.96)}
+.primary:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 14px 34px #8629ff4d}
+.primary:active{transform:translateY(0) scale(.97)}
+.ghost:hover,.hero-ghost:hover{transform:translateY(-2px)}
+.header-icon:active,.header-login:active{transform:scale(.94)}
+
+/* Card interaction: smoother lift + cover image zoom on hover */
+.card{transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s ease,border-color .4s ease}
+.cover{overflow:hidden}
+.cover img{transition:transform .6s cubic-bezier(.22,1,.36,1),filter .4s ease}
+.card:hover .cover img{transform:scale(1.08)}
+.card:hover .cover:after{opacity:.9}
+.card-rank{transition:transform .3s ease}
+.card:hover .card-rank{transform:scale(1.1) rotate(-4deg)}
+
+/* Buttons/menus press feedback + nicer disabled state */
+button:disabled,.nav-chapter:disabled{cursor:not-allowed;opacity:.4;transform:none!important}
+
+/* Logo: soft glow pulse on hover instead of a static color */
+.logo{transition:filter .3s ease}
+.logo:hover{filter:drop-shadow(0 0 14px rgba(193,92,255,.55))}
+
+/* Bottom nav: active tab gets a soft glowing dot + smoother swap */
+.bottom-item{position:relative}
+.bottom-item .icon{transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.bottom-item.active .icon{transform:translateY(-2px)}
+.bottom-item.active:after{
+  content:'';position:absolute;bottom:6px;width:4px;height:4px;border-radius:50%;
+  background:var(--a2,#c15cff);box-shadow:0 0 8px var(--a2,#c15cff)
+}
+.bottom-item:active{transform:scale(.93)}
+
+/* Modal: fade + gentle scale-in instead of a hard cut */
+@keyframes mnFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes mnPopIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal.show{animation:mnFadeIn .22s ease}
+.modal.show .box{animation:mnPopIn .32s cubic-bezier(.22,1,.36,1)}
+
+/* Hero + first sections ease onto the page instead of popping in */
+@keyframes mnRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hero-feature{animation:mnRise .5s cubic-bezier(.22,1,.36,1)}
+.mobile-feature-strip{animation:mnRise .5s cubic-bezier(.22,1,.36,1) .08s both}
+
+/* Filter chips: subtle glow pulse when selected, smoother hover slide */
+.filter-chips button,.sort-grid button{will-change:transform}
+.filter-chips button:hover,.sort-grid button:hover{transform:translateY(-1px)}
+.filter-chips button.selected{box-shadow:0 0 0 1px rgba(139,61,255,.25) inset,0 0 16px rgba(139,61,255,.22)}
+
+/* Chapter rows / side list items slide slightly on hover for tactile feel */
+.chapter:hover,.side-item:hover{transform:translateX(-3px)}
+
+/* Respect users who prefer reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+
+/* =========================================================
+   v51 — Home hero: new visual concept
+   Uses only elements that already exist in index.html
+   (.hero-glow / .hero-art-overlay / .hero-art-lines / .hero-dots /
+   .hero-kicker / .hero-meta / #heroFeaturedTitle) — no HTML changed,
+   so nothing app.js touches is renamed or removed.
+   ========================================================= */
+
+/* Kicker becomes a real glassy badge with a pulsing "live" dot */
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 14px 7px 16px;border-radius:999px;
+  background:rgba(168,85,247,.10);border:1px solid rgba(193,114,255,.28);
+  box-shadow:0 4px 18px rgba(139,61,255,.12);
+}
+.hero-kicker:before{
+  content:'';width:7px;height:7px;border-radius:50%;
+  background:#c765ff;box-shadow:0 0 0 0 rgba(199,101,255,.6);
+  animation:heroDotPing 2.2s cubic-bezier(.4,0,.6,1) infinite;
+}
+@keyframes heroDotPing{
+  0%{box-shadow:0 0 0 0 rgba(199,101,255,.55)}
+  70%{box-shadow:0 0 0 8px rgba(199,101,255,0)}
+  100%{box-shadow:0 0 0 0 rgba(199,101,255,0)}
+}
+
+/* Title gets a soft gradient treatment (falls back to solid white
+   on browsers without background-clip:text support) */
+.hero-feature-copy h1,#heroFeaturedTitle{
+  color:#fff;
+  background:linear-gradient(95deg,#ffffff 35%,#e7cbff 65%,#c765ff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* Meta row becomes a set of glassy stat chips instead of plain text */
+.hero-meta{gap:10px}
+.hero-meta span{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;padding:7px 13px;transition:border-color .25s,transform .25s;
+}
+.hero-meta span:hover{border-color:rgba(193,114,255,.4);transform:translateY(-1px)}
+
+/* CTA gets a slow breathing glow so it reads as the primary action */
+@keyframes heroCtaGlow{
+  0%,100%{box-shadow:0 10px 28px rgba(139,61,255,.30)}
+  50%{box-shadow:0 10px 38px rgba(139,61,255,.55)}
+}
+.hero-actions .primary{animation:heroCtaGlow 3.2s ease-in-out infinite}
+.hero-actions .primary:hover{animation-play-state:paused}
+
+/* Art side: the existing glow orb now drifts gently, the diagonal
+   line texture drifts slowly, and a light sweep passes over the
+   artwork every few seconds for a subtle "alive" feel */
+.hero-feature-art{isolation:isolate}
+.hero-glow{animation:heroGlowDrift 9s ease-in-out infinite alternate}
+@keyframes heroGlowDrift{
+  from{transform:translate(0,0) scale(1);opacity:.9}
+  to{transform:translate(-18px,22px) scale(1.12);opacity:1}
+}
+.hero-art-lines{
+  background-size:200% 200%;
+  animation:heroLinesDrift 16s linear infinite;
+}
+@keyframes heroLinesDrift{
+  from{background-position:0 0}
+  to{background-position:220px 0}
+}
+.hero-feature-art:after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.10) 50%,transparent 58%);
+  background-size:250% 250%;
+  animation:heroSweep 7s ease-in-out infinite;
+}
+@keyframes heroSweep{
+  0%,100%{background-position:120% 0}
+  50%{background-position:-20% 0}
+}
+.hero-feature-art img{filter:saturate(1.25) contrast(1.1) brightness(1.02)}
+
+/* Dots: smooth widening + color fade instead of an instant class swap */
+.hero-dots i{transition:width .4s cubic-bezier(.22,1,.36,1),background .4s,box-shadow .4s;cursor:pointer}
+.hero-dots i:hover{background:#77708a}
+
+@media(max-width:800px){
+  #page-home .hero-kicker{display:none!important} /* mobile already hides it; kept for consistency */
+  #page-home .hero-actions .primary{animation:heroCtaGlow 3.2s ease-in-out infinite!important}
+  #page-home .hero-feature-copy h1,#page-home #heroFeaturedTitle{
+    background:linear-gradient(95deg,#ffffff 35%,#e7cbff 65%,#c765ff 100%)!important;
+    -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-kicker:before,.hero-actions .primary,.hero-glow,.hero-art-lines,.hero-feature-art:after{animation:none}
+}

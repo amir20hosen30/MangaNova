@@ -27,3 +27,31 @@
  .detail-card{padding:18px;border-radius:16px}.detail-tabs button{padding:15px 16px}
  .related-grid{gap:9px}.related-card img{height:205px}
 }
+
+/* v50 — motion polish + finishing the purple pass (a couple of
+   rows here were still on the old gold accent from before v29) */
+.detail-card,.chapter-list button,.related-card,.tag-list span,.quick-stats span{
+  transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease,border-color .3s ease
+}
+.chapter-list button:hover{transform:translateX(-4px);box-shadow:0 8px 22px rgba(139,61,255,.12)}
+.related-card{overflow:hidden}
+.related-card img{transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.related-card:hover img{transform:scale(1.07)}
+.related-card:hover{transform:translateY(-4px);border-color:#8b3dff55}
+.cover-wrap img,.no-cover{transition:box-shadow .35s ease,transform .35s ease}
+.cover-wrap:hover img{transform:translateY(-3px);box-shadow:0 26px 60px rgba(139,61,255,.28)}
+.detail-tabs button{transition:color .25s ease}
+.detail-tabs button:after{transition:transform .3s ease;transform-origin:center}
+.big{transition:transform .25s ease}
+.big:active{transform:scale(.96)}
+
+/* Rating stars/score kept warm-gold on purpose (a gold star on a purple
+   card reads instantly as "rating" — swapping it to purple would blend
+   into every other accent on the page), just given a soft glow to match
+   the rest of the neon treatment. */
+.stars button{transition:transform .2s ease,filter .2s ease}
+.stars button:hover{transform:scale(1.15);filter:drop-shadow(0 0 6px rgba(255,196,0,.55))}
+.big-rating{text-shadow:0 0 18px rgba(255,196,0,.25)}
+
+.comment{transition:background .25s ease}
+.comment:hover{background:#ffffff03}

@@ -8,3 +8,19 @@ body{background:#06060a!important}
 .reader-bar button,.reader-controls button{background:#15151e!important;border-color:#ffffff0d!important}
 .reader-bar button:hover,.reader-controls button:hover{border-color:#9a4dff!important}
 .manga-page{box-shadow:0 12px 40px rgba(0,0,0,.35)}
+
+/* v50 — finish the purple migration (these two hovers were missed
+   in the v29 pass and were still the old yellow accent) + motion polish */
+.reader-tools button:hover{border-color:var(--reader-a,#9a4dff)!important;color:var(--reader-a,#9a4dff)!important}
+.nav-chapter:hover:not(:disabled){border-color:var(--reader-a,#9a4dff)!important;color:var(--reader-a,#9a4dff)!important}
+.nav-chapter.secondary{color:var(--reader-a,#9a4dff)!important}
+
+.reader-tools button,.nav-chapter,.reader-btn{transition:transform .25s ease,border-color .25s ease,color .25s ease,box-shadow .25s ease}
+.reader-tools button:hover{box-shadow:0 0 14px rgba(154,77,255,.25)}
+.reader-btn:hover{transform:translateY(-1px)}
+.nav-chapter:hover:not(:disabled){transform:translateY(-2px)}
+
+@keyframes mnPageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.manga-page{animation:mnPageIn .35s ease both}
+
+@media(prefers-reduced-motion:reduce){.manga-page{animation:none}}

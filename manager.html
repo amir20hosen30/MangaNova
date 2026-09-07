@@ -127,6 +127,19 @@ textarea{min-height:100px;resize:vertical}
  .chapter-row button{width:100%}
  .topbar h1{font-size:22px}
 }
+
+/* v50 -- motion polish addition (does not remove any rule above) */
+*{scrollbar-width:thin;scrollbar-color:#a855f766 transparent}
+*::-webkit-scrollbar{width:7px;height:7px}
+*::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#c084fc,#7c3aed);border-radius:10px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #c084fc;outline-offset:2px;border-radius:8px}
+.nav button,.nav a{transition:transform .25s cubic-bezier(.22,1,.36,1),background .25s,color .25s,box-shadow .25s}
+.nav button:hover,.nav a:hover{transform:translateX(-3px)}
+.stat-card,.work-row,.ticket-admin-row,.site-btn,button,.primary{transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,border-color .25s,filter .2s}
+.stat-card:hover{transform:translateY(-3px)}
+.primary:hover{transform:translateY(-2px)}
+button:active,.primary:active,.site-btn:active{transform:scale(.96)}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 </style>
 </head>
 <body>
