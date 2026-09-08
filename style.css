@@ -1214,3 +1214,26 @@ button:disabled,.nav-chapter:disabled{cursor:not-allowed;opacity:.4;transform:no
 /* Explore: a real empty-state instead of a bare, cramped <p> */
 #exploreWorks:empty:before,#exploreWorks .explore-empty{display:none}
 .explore-empty{grid-column:1/-1}
+
+/* =========================================================
+   v53 — Explore toolbar: search box + filter button now
+   read as one matching pair instead of one glowing input
+   next to one flat, undecorated button.
+   ========================================================= */
+#page-explore .explore-search,
+#page-explore .filter-toggle{
+  background:linear-gradient(145deg,#141220,#0d0c14)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  transition:border-color .25s,box-shadow .25s,color .25s!important;
+}
+#page-explore .filter-toggle{color:var(--t)!important}
+#page-explore .filter-toggle:hover,
+#page-explore .filter-toggle:focus-visible{
+  border-color:rgba(166,79,255,.6)!important;
+  color:#c9a6ff!important;
+  box-shadow:0 0 0 3px rgba(166,79,255,.10)!important;
+}
+#page-explore .explore-search:focus-within{
+  border-color:rgba(166,79,255,.55)!important;
+  box-shadow:0 0 0 3px rgba(166,79,255,.10)!important;
+}
