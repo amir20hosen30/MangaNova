@@ -1280,3 +1280,17 @@ button:disabled,.nav-chapter:disabled{cursor:not-allowed;opacity:.4;transform:no
   #page-explore .filter-toggle{padding:0 12px!important;font-size:12.5px!important}
   #page-explore .filter-toggle svg{width:16px!important;height:16px!important}
 }
+
+/* =========================================================
+   v55 — Explore search: kill the double ring.
+   A sitewide `input:focus{box-shadow:...}` rule (used for normal
+   form fields) was ALSO firing on the <input> nested inside
+   .explore-search, drawing its own inset focus ring in addition
+   to the container's own focus border — two purple boxes with a
+   gap between them. The input itself should never show its own
+   focus decoration here; only the outer box does.
+   ========================================================= */
+#page-explore .explore-search input:focus,
+#page-explore .explore-search input{
+  outline:0!important;border:0!important;box-shadow:none!important;background:transparent!important;
+}
