@@ -1237,3 +1237,46 @@ button:disabled,.nav-chapter:disabled{cursor:not-allowed;opacity:.4;transform:no
   border-color:rgba(166,79,255,.55)!important;
   box-shadow:0 0 0 3px rgba(166,79,255,.10)!important;
 }
+
+/* =========================================================
+   v54 — Explore toolbar, for real this time.
+   The old rules were a fragile fixed-px grid built for a
+   third element (.rating-mini) that no longer exists in the
+   HTML, which is why the filter button could disappear or
+   collapse at certain widths. This replaces it with a simple
+   flexbox: the filter button always keeps its natural size,
+   the search box always fills whatever space is left — no
+   magic pixel widths, so it can't break again. Also brings
+   the search box's idle state in line with its focus state
+   (before, idle was a nearly-invisible outline and focus was
+   a loud glow — same box, two unrelated looks).
+   ========================================================= */
+#page-explore .explore-tools{
+  display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+  width:100%!important;max-width:560px!important;gap:10px!important;
+  grid-template-columns:unset!important;
+}
+#page-explore .explore-search{
+  flex:1 1 auto!important;min-width:0!important;width:auto!important;margin:0!important;
+}
+#page-explore .filter-toggle{
+  flex:0 0 auto!important;width:auto!important;min-width:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:7px!important;white-space:nowrap!important;padding:0 16px!important;font-size:14px!important;
+}
+#page-explore .explore-search,#page-explore .filter-toggle{
+  height:52px!important;min-height:52px!important;box-sizing:border-box!important;border-radius:14px!important;
+}
+#page-explore .explore-search,#page-explore .filter-toggle{
+  border:1px solid rgba(255,255,255,.18)!important;
+}
+#page-explore .explore-search:focus-within{
+  border-color:rgba(166,79,255,.5)!important;box-shadow:0 0 0 3px rgba(166,79,255,.08)!important;
+}
+#page-explore .filter-toggle:hover,#page-explore .filter-toggle:focus-visible{
+  border-color:rgba(166,79,255,.5)!important;color:#c9a6ff!important;box-shadow:0 0 0 3px rgba(166,79,255,.08)!important;
+}
+@media(max-width:420px){
+  #page-explore .filter-toggle{padding:0 12px!important;font-size:12.5px!important}
+  #page-explore .filter-toggle svg{width:16px!important;height:16px!important}
+}
